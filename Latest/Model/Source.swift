@@ -32,10 +32,35 @@ extension App {
 			case .sparkle:
 				return NSImage(named: "sparkle")
 			case .appStore:
-				return NSImage(named: "appstore")
+				return NSImage(named: "appstore") ?? Self.appStoreAppIcon
 			case .homebrew:
-				return NSImage(named: "brew")
+				return NSImage(named: "brew") ?? Self.homebrewBadge
 			}
+		}
+		
+		/// Whether the source is marked with its icon in the list of apps. Sparkle is the common case and stays unmarked.
+		var isBadgedInList: Bool {
+			switch self {
+			case .appStore, .homebrew:
+				return true
+			case .none, .sparkle:
+				return false
+			}
+		}
+		
+		/// The App Store app's own icon. Used when the asset catalog has no "appstore" image.
+		private static let appStoreAppIcon: NSImage? = {
+			let path = "/System/Applications/App Store.app"
+			guard FileManager.default.fileExists(atPath: path) else { return nil }
+			return NSWorkspace.shared.icon(forFile: path)
+		}()
+		
+		/// Homebrew's beer mug, drawn as a small image. Used when the asset catalog has no "brew" image.
+		private static let homebrewBadge = NSImage(size: NSSize(width: 16, height: 16), flipped: false) { rect in
+			let text = NSAttributedString(string: "🍺", attributes: [.font: NSFont.systemFont(ofSize: 13)])
+			let size = text.size()
+			text.draw(at: NSPoint(x: (rect.width - size.width) / 2, y: (rect.height - size.height) / 2))
+			return true
 		}
 		
 		/// The name of the source.
